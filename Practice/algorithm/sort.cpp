@@ -85,10 +85,14 @@ int main()
     {
         // 基数排序
         char str[16][32] = {
-            "13412341234","13512341231","13112341534","13712341234",
-            "13412351231","13512341232","13912341234","13812341234",
-            "13412361232","13512341233","13112341244","13912341234",
-            "13412371234","13512341234","13112341234","13913341234",
+            "13412341234","13512341231",
+            "13112341534","13712341234",
+            "13412351231","13512341232",
+            "13912341234","13812341234",
+            "13412361232","13512341233",
+            "13112341244","13912341234",
+            "13412371234","13512341234",
+            "13112341234","13913341234",
         };
         RadixSort(str,16, 11);
         std::cout<<"基数排序:"<<std::endl;
@@ -344,29 +348,6 @@ void CountingSort(int* s, int n)
     }
 }
 
-void _RadixSort(char** pStrs, int n, int k)
-{
-    if(k < 0){
-        return;
-    }
-    char tmp[32];
-    for(int i=1;i<n;++i){
-        char v = pStrs[i][k];
-        memcpy(tmp, pStrs[i],strlen(pStrs[i]));
-        tmp[strlen(pStrs[i])] = '\0';
-        //查找插入的位置
-        int j = i-1;
-        for(; j >= 0; --j){
-            if(pStrs[j][k] > v){
-                memcpy(pStrs[j+1],pStrs[j],strlen(pStrs[j])); //数据移动
-                //pStrs[j+1] = pStrs[j]; //数据移动
-            }else{
-                break;
-            }
-        }
-        memcpy(pStrs[j+1],tmp,strlen(tmp)); //数据移动
-    }
-}
 void RadixSort(char s[][32], int n, int c)
 {
     for(int k=c-1; k>= 0; --k){
@@ -379,14 +360,14 @@ void RadixSort(char s[][32], int n, int c)
             int j = i-1;
             for(; j >= 0; --j){
                 if(s[j][k] > v){
-                    memcpy(s[j+1],s[j],strlen(s[j])); //数据移动
-                    //pStrs[j+1] = pStrs[j]; //数据移动
+                    //数据移动
+                    memcpy(s[j+1],s[j],strlen(s[j])); 
                 }else{
                     break;
                 }
             }
-
-            memcpy(s[j+1],tmp,strlen(tmp)); //数据移动
+            //数据移动
+            memcpy(s[j+1],tmp,strlen(tmp)); 
         }
     }
 }
