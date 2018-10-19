@@ -1,5 +1,5 @@
 #include <iostream>
-#include <string>
+#include <cstring>
 using namespace std;
 
 // 冒泡排序
@@ -14,6 +14,10 @@ void MergeSort(int* s, int n);
 void QuickSort(int* s, int n);
 // 求第K大的元素
 int QueryNumber(int* s, int n, int k);
+// 计数排序
+void CountingSort(int* s, int n);
+// 基数排序
+void RadixSort(char s[][32], int n, int c);
 
 int main()
 {
@@ -68,7 +72,31 @@ int main()
         // 求第K大的元素
         int v = QueryNumber(s,sizeof(s)/4,3);
         std::cout<<"求第3大的元素:"<<v<<std::endl;      
-    }   
+    }  
+    {
+        // 计数排序
+        CountingSort(s,sizeof(s)/4);
+        std::cout<<"计数排序:";
+        for(int i=0; i<sizeof(s)/4; i++){
+            std::cout<<s[i]<<" ";
+        }
+        std::cout<<std::endl;        
+    } 
+    {
+        // 基数排序
+        char str[16][32] = {
+            "13412341234","13512341231","13112341534","13712341234",
+            "13412351231","13512341232","13912341234","13812341234",
+            "13412361232","13512341233","13112341244","13912341234",
+            "13412371234","13512341234","13112341234","13913341234",
+        };
+        RadixSort(str,16, 11);
+        std::cout<<"基数排序:"<<std::endl;
+        for(int i=0; i<16; i++){
+            std::cout<<str[i]<<std::endl;
+        }
+        std::cout<<std::endl;        
+    } 
     std::cin.ignore();
  
     return 0;
@@ -101,6 +129,10 @@ void InsertionSort(int* s, int n)
     if(n <= 1){
         return;
     }
+    /**
+     * i 表示未排序区间
+     * j 表示已排序区间
+    */
     for(int i=1;i<n;++i){
         int v = s[i];
         //查找插入的位置
@@ -269,4 +301,92 @@ int QueryNumberRecursive(int* s, int p, int r, int k)
 int QueryNumber(int* s, int n, int k)
 {
     return QueryNumberRecursive(s, 0, n-1,k);
+}
+
+void CountingSort(int* s, int n)
+{
+    if (n <= 1){
+        return;
+    }
+    // 查找数组中数据的范围
+    int iMax = s[0];
+    for (int i = 1; i < n; ++i) {
+        if (iMax < s[i]) {
+            iMax = s[i];
+        }
+    }
+    // 申请一个计数数组 c，下标大小 [0,max]
+    int* lpC = new int[iMax + 1]; 
+    for (int i = 0; i <= iMax; ++i) {
+        lpC[i] = 0;
+    }
+    // 计算每个元素的个数，放入 c 中
+    for (int i = 0; i < n; ++i) {
+        lpC[s[i]]++;
+    }
+
+    // 依次累加
+    for (int i = 1; i <= iMax; ++i) {
+        lpC[i] = lpC[i-1] + lpC[i];
+    }
+
+    // 临时数组 r，存储排序之后的结果
+    int* lpR = new int[n];
+    // 计算排序的关键步骤，有点难理解
+    for (int i = n - 1; i >= 0; --i) {
+        int index = lpC[s[i]]-1;
+        lpR[index] = s[i];
+        lpC[s[i]]--;
+    }
+    // 将结果拷贝给 a 数组
+    for (int i = 0; i < n; ++i) {
+        s[i] = lpR[i];
+    }
+}
+
+void _RadixSort(char** pStrs, int n, int k)
+{
+    if(k < 0){
+        return;
+    }
+    char tmp[32];
+    for(int i=1;i<n;++i){
+        char v = pStrs[i][k];
+        memcpy(tmp, pStrs[i],strlen(pStrs[i]));
+        tmp[strlen(pStrs[i])] = '\0';
+        //查找插入的位置
+        int j = i-1;
+        for(; j >= 0; --j){
+            if(pStrs[j][k] > v){
+                memcpy(pStrs[j+1],pStrs[j],strlen(pStrs[j])); //数据移动
+                //pStrs[j+1] = pStrs[j]; //数据移动
+            }else{
+                break;
+            }
+        }
+        memcpy(pStrs[j+1],tmp,strlen(tmp)); //数据移动
+    }
+}
+void RadixSort(char s[][32], int n, int c)
+{
+    for(int k=c-1; k>= 0; --k){
+        char tmp[32];
+        for(int i=1;i<n;++i){
+            char v = s[i][k];
+            memcpy(tmp, s[i],strlen(s[i]));
+            tmp[strlen(s[i])] = '\0';
+            //查找插入的位置
+            int j = i-1;
+            for(; j >= 0; --j){
+                if(s[j][k] > v){
+                    memcpy(s[j+1],s[j],strlen(s[j])); //数据移动
+                    //pStrs[j+1] = pStrs[j]; //数据移动
+                }else{
+                    break;
+                }
+            }
+
+            memcpy(s[j+1],tmp,strlen(tmp)); //数据移动
+        }
+    }
 }
