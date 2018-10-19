@@ -1,7 +1,8 @@
 #include <iostream>
 #include <string>
 using namespace std;
- 
+
+/// 回文字符串
 int main()
 {
     string str;
