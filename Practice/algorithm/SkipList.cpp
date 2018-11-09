@@ -213,6 +213,7 @@ CNode* CSkipList::Find(int v)
     CNode* lpNode = m_lpHead;
     /**
      * 从 最大级索引链表开始查找.
+     * K -> k-1 -> k-2 ...->0
     */
     for(int i=levelCount-1; i>=0; --i){
         /**
