@@ -11,12 +11,21 @@ using namespace std;
  * 跳表的一种实现方法。
  * 跳表中存储的是正整数，并且存储的是不重复的。
  *
- * 翻译JAVA版本 原作者 
+ * 跳表的C++版本.
+ * 翻译JAVA版本 原作者 Author：ZHENG
  * 
  * Author：puhuaqiang
+ * 
+ *  跳表结构:
+ * 
+ *  第K级           1           9
+ *  第K-1级         1     5     9
+ *  第K-2级         1  3  5  7  9
+ *  ...             ....
+ *  第0级(原始链表)  1  2  3  4  5  6  7  8  9
  */
 
-const int MAX_LEVEL = 6;
+const int MAX_LEVEL = 16;
 
 /**
  * @brief 节点
@@ -46,14 +55,18 @@ public:
     */
     void SetLevel(int l);
 private:
+    /**当前节点的值*/
     int m_data;
     /** 
      * 当前节点的每个等级的下一个节点.
      * 第2级 N1 N2
      * 第1级 N1 N2
      * 如果N1是本节点,则 m_lpForwards[x] 保存的是N2
+     * 
+     * [0] 就是原始链表.
      */
     CNode* m_lpForwards[MAX_LEVEL];
+    /**当前节点的所在的最大索引级别*/
     int m_iMaxLevel;
 };
 
@@ -65,12 +78,31 @@ class CSkipList
 public:
     CSkipList();
     ~CSkipList();
-
+    /**
+     * @brief 查找指定的值的节点
+     * @param v 正整数
+    */
     CNode* Find(int v);
+    /**
+     * @brief 插入指定的值
+     * @param v 正整数
+    */
     void Insert(int v);
-    void Delete(int v);
+    /**
+     * @brief 删除指定的值的节点
+     * @param v 正整数
+    */
+    int Delete(int v);
     void PrintAll();
+    /**
+     * @brief 打印跳表结构
+     * @param l 等于-1时打印所有级别的结构 >=0时打印指定级别的结构
+    */
     void PrintAll(int l);
+    /**
+     * @brief 插入节点时,得到插入K级的随机函数
+     * @return K
+    */
     int RandomLevel();
 
 private:
@@ -85,18 +117,39 @@ private:
 int main()
 {
     CSkipList skipList;
-    for(int i=1; i< 10; i++){
+    /// 插入原始值
+    for(int i=1; i< 50; i++){
         if((i%3) == 0){
             skipList.Insert(i);
         }
     }
-    for(int i=1; i< 10; i++){
+    for(int i=1; i< 50; i++){
         if((i%3) == 1){
             skipList.Insert(i);
         }
     }
     skipList.PrintAll();
     std::cout<<std::endl;
+    /// 打印所有等级结构
+    skipList.PrintAll(-1);
+    /// 查找
+    std::cout<<std::endl;
+    CNode* lpNode = skipList.Find(27);
+    if(NULL != lpNode){
+        std::cout<<"查找值为27的节点,找到该节点,节点值:"<<lpNode->GetData()<<std::endl;
+    }else{
+        std::cout<<"查找值为27的节点,未找到该节点"<<std::endl;
+    }
+    /// 删除
+    std::cout<<std::endl;
+    int ret = skipList.Delete(46);
+    if(0 == ret){
+        std::cout<<"查找值为46的节点,找到该节点,并删除成功"<<std::endl;
+    }else{
+        std::cout<<"查找值为46的节点,找到该节点,删除失败"<<std::endl;
+    }
+    std::cout<<std::endl;
+    //打印所有等级结构
     skipList.PrintAll(-1);
     std::cin.ignore();
     return 0;
@@ -157,7 +210,25 @@ CSkipList::~CSkipList()
 }
 CNode* CSkipList::Find(int v)
 {
-
+    CNode* lpNode = m_lpHead;
+    /**
+     * 从 最大级索引链表开始查找.
+    */
+    for(int i=levelCount-1; i>=0; --i){
+        /**
+         * 查找小于v的节点(lpNode).
+        */
+        while((NULL != lpNode->GetIdxList()[i]) && (lpNode->GetIdxList()[i]->GetData() < v)){
+            lpNode = lpNode->GetIdxList()[i];
+        }
+    }
+    /**
+     * lpNode 是小于v的节点, lpNode的下一个节点就等于或大于v的节点
+    */
+    if((NULL != lpNode->GetIdxList()[0]) && (lpNode->GetIdxList()[0]->GetData() == v)){
+        return lpNode->GetIdxList()[0];
+    }
+    return NULL;
 }
 void CSkipList::Insert(int v)
 {
@@ -218,9 +289,32 @@ void CSkipList::Insert(int v)
         levelCount = level;
     }
 }
-void CSkipList::Delete(int v)
+int CSkipList::Delete(int v)
 {
-
+    int ret = -1;
+    CNode *lpUpdateNode[levelCount];
+    CNode *lpFind = m_lpHead;
+    for(int i=levelCount-1; i>= 0; --i){
+        /**
+         * 查找小于v的节点(lpFind).
+        */
+        while((NULL != lpFind->GetIdxList()[i]) && (lpFind->GetIdxList()[i]->GetData() < v)){
+            lpFind = lpFind->GetIdxList()[i];
+        }
+        lpUpdateNode[i] = lpFind;
+    }
+    /**
+     * lpFind 是小于v的节点, lpFind的下一个节点就等于或大于v的节点
+    */
+    if((NULL != lpFind->GetIdxList()[0]) && (lpFind->GetIdxList()[0]->GetData() == v)){
+        for(int i=levelCount-1; i>=0; --i){
+            if((NULL != lpUpdateNode[i]->GetIdxList()[i]) && (v == lpUpdateNode[i]->GetIdxList()[i]->GetData())){
+                lpUpdateNode[i]->GetIdxList()[i] = lpUpdateNode[i]->GetIdxList()[i]->GetIdxList()[i];
+                ret = 0;
+            }
+        }
+    }
+    return ret;
 }
 void CSkipList::PrintAll()
 {
@@ -250,16 +344,17 @@ void CSkipList::PrintAll(int l)
 int GetRandom()
 {
     static int _count = 1;
-	std::default_random_engine generator(time(0) + (_count++));
+	std::default_random_engine generator(time(0) + _count);
 	std::uniform_int_distribution<int> distribution(1,99999/*0x7FFFFFFF*/);
 	int dice_roll = distribution(generator);
+    _count += 100;
 	return dice_roll;
 }
 int CSkipList::RandomLevel()
 {
     int level = 1;
     for(int i=1; i<MAX_LEVEL; ++i){
-        if(1 == (GetRandom()%2)){
+        if(1 == (GetRandom()%3)){
             level++;
         }
     }
